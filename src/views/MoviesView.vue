@@ -24,8 +24,9 @@
 </script>
 
 <template>
-
-  <li
+    
+  <ul class="genre-list">
+    <li
     v-for="genre in genres"
     :key="genre.id"
     @click="listMovies(genre.id)"
@@ -33,6 +34,7 @@
   >
     {{ genre.name }}
   </li>
+</ul>
 
   <div class="movie-list">
   <div v-for="movie in movies" :key="movie.id" class="movie-card">
@@ -57,7 +59,7 @@
   flex-wrap: wrap;
   gap: 2rem;
   list-style: none;
-  padding: 0;
+  margin-bottom: 2rem;
 }
 
 .genre-item {
@@ -103,12 +105,5 @@
   line-height: 1.3rem;
   height: 3.2rem;
 }
-.genre-list {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 2rem;
-  list-style: none;
-  margin-bottom: 2rem;
-}
+
 </style>
