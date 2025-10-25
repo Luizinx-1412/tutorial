@@ -1,25 +1,20 @@
 <script setup>
-  import { ref, onMounted } from 'vue';
-  import api from '@/plugins/axios';
-  import Loading from 'vue-loading-overlay';
-  import { useGenreStore } from '@/stores/genre';
-  import { useRouter } from 'vue-router'
-const router = useRouter()
+import { ref, onMounted } from 'vue';
+import api from '@/plugins/axios';
+import Loading from 'vue-loading-overlay';
+import { useGenreStore } from '@/stores/genre';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const genreStore = useGenreStore(); 
+
+const isLoading = ref(false);
+const movies = ref([]);
 
 
 function openMovie(movieId) {
-  router.push({ name: 'MovieDetails', params: { movieId } })};
-
-
-  const isLoading = ref(false);
-  const genres = ref([]);
-
-onMounted(async () => {
-  isLoading.value = true;
-  await genreStore.getAllGenres('movie');
-  isLoading.value = false;
-});
-    const movies = ref([]);
+  router.push({ name: 'MovieDetails', params: { movieId } });
+}
 
 const listMovies = async (genreId) => {
   genreStore.setCurrentGenreId(genreId);
@@ -35,57 +30,61 @@ const listMovies = async (genreId) => {
 };
 
 
-const getGenreName = (id) => genres.value.find((genre) => genre.id === id).name
+const getGenreName = (id) => {
+  const genre = (genreStore.genres || []).find((g) => g.id === id);
+  return genre ? genre.name : '';
+};
+
 
 const formatDate = (date) => new Date(date).toLocaleDateString('pt-BR');
 
-const genreStore = useGenreStore();
 
-
-
+onMounted(async () => {
+  isLoading.value = true;
+  await genreStore.getAllGenres('movie');
+  isLoading.value = false;
+});
 </script>
 
 <template>
-
   <ul class="genre-list">
-  <li
-    v-for="genre in genreStore.genres"
-    :key="genre.id"
-    @click="listMovies(genre.id)"
-    class="genre-item"
-    :class="{ active: genre.id === genreStore.currentGenreId }"
-  >
-    {{ genre.name }}
-  </li>
+    <li
+      v-for="genre in genreStore.genres"
+      :key="genre.id"
+      @click="listMovies(genre.id)"
+      class="genre-item"
+      :class="{ active: genre.id === genreStore.currentGenreId }"
+    >
+      {{ genre.name }}
+    </li>
   </ul>
 
-<loading v-model:active="isLoading" is-full-page />
+  <Loading v-model:active="isLoading" is-full-page />
 
   <div class="movie-list">
-  <div v-for="movie in movies" :key="movie.id" class="movie-card">
-   <img
-  :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
-  :alt="movie.title"
-  @click="openMovie(movie.id)"
-/>
-    <div class="movie-details">
-      <p class="movie-title">{{ movie.title }}</p>
-      <p class="movie-release-date">{{ formatDate(movie.release_date) }}</p>
-      <p class="movie-genres">
-<span
-  v-for="genre_id in movie.genre_ids"
-  :key="genre_id"
-  @click="listMovies(genre_id)"
-  :class="{ active: genre_id === genreStore.currentGenreId }"
-  >
-  {{ genreStore.getGenreName(genre_id) }}
-</span>
-</p>
+    <div v-for="movie in movies" :key="movie.id" class="movie-card">
+      <img
+        :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
+        :alt="movie.title"
+        @click="openMovie(movie.id)"
+      />
+      <div class="movie-details">
+        <p class="movie-title">{{ movie.title }}</p>
+        <p class="movie-release-date">{{ formatDate(movie.release_date) }}</p>
+        <p class="movie-genres">
+          <span
+            v-for="genre_id in movie.genre_ids"
+            :key="genre_id"
+            @click.stop="listMovies(genre_id)"
+            :class="{ active: genre_id === genreStore.currentGenreId }"
+          >
+            {{ getGenreName(genre_id) }}
+          </span>
+        </p>
+      </div>
     </div>
   </div>
-</div>
 </template>
-
 
 <style scoped>
 .genre-list {
@@ -109,6 +108,7 @@ const genreStore = useGenreStore();
   background-color: #4e9e5f;
   box-shadow: 0 0 0.5rem #387250;
 }
+
 .movie-list {
   display: flex;
   flex-wrap: wrap;
@@ -140,6 +140,7 @@ const genreStore = useGenreStore();
   line-height: 1.3rem;
   height: 3.2rem;
 }
+
 .movie-genres {
   display: flex;
   flex-direction: row;
@@ -163,6 +164,7 @@ const genreStore = useGenreStore();
   background-color: #455a08;
   box-shadow: 0 0 0.5rem #748708;
 }
+
 .active {
   background-color: #67b086;
   font-weight: bolder;
